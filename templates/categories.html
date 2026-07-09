@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Categories{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div><h1>Categories</h1><p>Manage product categories</p></div>
+    <a href="{% url 'category_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Category</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Description</th><th>Products</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td class="fw-medium">{{ cat.name }}</td>
+                    <td class="text-muted small">{{ cat.description|truncatechars:60|default:"—" }}</td>
+                    <td><span class="badge bg-primary">{{ cat.products.count }}</span></td>
+                    <td class="text-muted small">{{ cat.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'category_edit' cat.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'category_delete' cat.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-5">No categories yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+{% block page_title %}Search Results{% endblock %}
+
+{% block content %}
+<!-- Search Form -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <form method="get" action="{% url 'dashboard_search' %}" class="row g-2 align-items-end">
+            <div class="col-12 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search orders, customers, products..." value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="orders" {% if search_type == 'orders' %}selected{% endif %}>Orders</option>
+                    <option value="customers" {% if search_type == 'customers' %}selected{% endif %}>Customers</option>
+                    <option value="products" {% if search_type == 'products' %}selected{% endif %}>Products</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if query %}
+<div class="mb-3">
+    <h5 class="text-muted">
+        {% if total_results %}
+            Found results for "<strong>{{ query }}</strong>"
+        {% else %}
+            No results found for "<strong>{{ query }}</strong>"
+        {% endif %}
+    </h5>
+</div>
+
+<!-- Orders Results -->
+{% if orders %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bag-check me-2"></i>Orders</span>
+        <span class="badge bg-primary">{{ orders|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Order #</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="fw-medium">{{ order.order_number }}</td>
+                    <td>{{ order.customer.full_name }}</td>
+                    <td>
+                        {% if order.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                        {% elif order.status == 'processing' %}<span class="badge bg-info">Processing</span>
+                        {% elif order.status == 'shipped' %}<span class="badge bg-primary">Shipped</span>
+                        {% elif order.status == 'delivered' %}<span class="badge bg-success">Delivered</span>
+                        {% elif order.status == 'cancelled' %}<span class="badge bg-danger">Cancelled</span>
+                        {% else %}<span class="badge bg-secondary">{{ order.status|capfirst }}</span>{% endif %}
+                    </td>
+                    <td>${{ order.total_amount }}</td>
+                    <td class="text-muted small">{{ order.created_at|date:"M d, Y" }}</td>
+                    <td><a href="{% url 'order_detail' order.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Customers Results -->
+{% if customers %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-2"></i>Customers</span>
+        <span class="badge bg-info">{{ customers|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td class="fw-medium">{{ customer.full_name }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.city }}</td>
+                    <td><a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Products Results -->
+{% if products %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-box-seam me-2"></i>Products</span>
+        <span class="badge bg-warning text-dark">{{ products|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Product</th><th>SKU</th><th>Price</th><th>Stock</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td class="fw-medium">{{ product.name }}</td>
+                    <td class="text-muted small">{{ product.sku }}</td>
+                    <td>${{ product.price }}</td>
+                    <td>
+                        {% if product.stock < 10 %}<span class="badge bg-danger">{{ product.stock }}</span>
+                        {% elif product.stock < 50 %}<span class="badge bg-warning text-dark">{{ product.stock }}</span>
+                        {% else %}<span class="badge bg-success">{{ product.stock }}</span>{% endif %}
+                    </td>
+                    <td><a href="{% url 'product_detail' product.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not total_results %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+        <h5 class="text-muted">No results found</h5>
+        <p class="text-muted">Try a different search term or category</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-2">Back to Dashboard</a>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+        <h5 class="text-muted">Enter a search term above</h5>
+        <p class="text-muted">Search across orders, customers, and products</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

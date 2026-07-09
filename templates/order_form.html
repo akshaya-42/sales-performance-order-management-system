@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1>{{ title }}</h1>
+        <p>{% if order %}Edit order {{ order.order_number }}{% else %}Create a new customer order{% endif %}</p>
+    </div>
+    <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Orders
+    </a>
+</div>
+
+<form method="post" id="orderForm">
+    {% csrf_token %}
+    <div class="row g-4">
+
+        <!-- Left column: Order details -->
+        <div class="col-lg-8">
+
+            <!-- Order Info Card -->
+            <div class="card p-4 mb-4">
+                <h6 class="fw-semibold mb-3 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em;">
+                    <i class="bi bi-info-circle me-1"></i> Order Details
+                </h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Customer *</label>
+                        <div class="d-flex gap-2">
+                            {{ form.customer }}
+                            <a href="{% url 'customer_create' %}" class="btn btn-outline-secondary"
+                               title="Add new customer" target="_blank">
+                                <i class="bi bi-person-plus"></i>
+                            </a>
+                        </div>
+                        {% if form.customer.errors %}
+                            <div class="text-danger small mt-1">{{ form.customer.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Can't find the customer?
+                            <a href="{% url 'customer_create' %}" target="_blank">Add a new customer</a>
+                            then refresh this page.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Method</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <div class="text-danger small mt-1">{{ form.payment_method.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Discount (%)</label>
+                        {{ form.discount }}
+                        {% if form.discount.errors %}
+                            <div class="text-danger small mt-1">{{ form.discount.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center pt-4">
+                        <div class="form-check">
+                            {{ form.payment_status }}
+                            <label class="form-check-label ms-1">Payment Received</label>
+                        </div>
+                        {% if form.payment_status.errors %}
+                            <div class="text-danger small mt-1">{{ form.payment_status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small mt-1">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items Card -->
+            <div class="card p-4">
+                <h6 class="fw-semibold mb-3 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em;">
+                    <i class="bi bi-cart3 me-1"></i> Order Items
+                </h6>
+
+                {{ formset.management_form }}
+
+                <div id="formset-container">
+                    {% for item_form in formset %}
+                    <div class="order-item-row border rounded p-3 mb-3 {% if item_form.instance.pk %}existing-item{% endif %}">
+                        {{ item_form.id }}
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small">Product *</label>
+                                {{ item_form.product }}
+                                {% if item_form.product.errors %}
+                                    <div class="text-danger small">{{ item_form.product.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Quantity *</label>
+                                {{ item_form.quantity }}
+                                {% if item_form.quantity.errors %}
+                                    <div class="text-danger small">{{ item_form.quantity.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Unit Price *</label>
+                                {{ item_form.unit_price }}
+                                {% if item_form.unit_price.errors %}
+                                    <div class="text-danger small">{{ item_form.unit_price.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                {% if formset.can_delete %}
+                                <div class="form-check" title="Delete this item">
+                                    {{ item_form.DELETE }}
+                                    <label class="form-check-label text-danger" title="Mark for deletion">
+                                        <i class="bi bi-trash"></i>
+                                    </label>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Empty form template (hidden, cloned by JS) -->
+                <div id="empty-form-template" class="d-none">
+                    <div class="order-item-row border rounded p-3 mb-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small">Product *</label>
+                                {{ formset.empty_form.product }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Quantity *</label>
+                                {{ formset.empty_form.quantity }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Unit Price *</label>
+                                {{ formset.empty_form.unit_price }}
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary btn-sm mt-1" id="add-item-btn">
+                    <i class="bi bi-plus-circle me-1"></i> Add Item
+                </button>
+
+                {% if formset.non_form_errors %}
+                <div class="alert alert-danger mt-3">{{ formset.non_form_errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right column: Summary & submit -->
+        <div class="col-lg-4">
+            <div class="card p-4 sticky-top" style="top: 80px;">
+                <h6 class="fw-semibold mb-3 text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em;">
+                    <i class="bi bi-receipt me-1"></i> Summary
+                </h6>
+
+                {% if order %}
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Order #</span>
+                    <span class="fw-semibold">{{ order.order_number }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Current Total</span>
+                    <span class="fw-semibold">₹{{ order.total_amount }}</span>
+                </div>
+                <hr>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mb-2 small text-muted">
+                    <span>Items</span>
+                    <span id="summary-items">—</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 small text-muted">
+                    <span>Subtotal</span>
+                    <span id="summary-subtotal">—</span>
+                </div>
+
+                <hr>
+                <div class="d-flex justify-content-between fw-semibold">
+                    <span>Est. Total</span>
+                    <span id="summary-total" class="text-primary">—</span>
+                </div>
+                <p class="text-muted small mt-1">Final total calculated after save.</p>
+
+                <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if order %}Update Order{% else %}Create Order{% endif %}
+                    </button>
+                    <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('formset-container');
+    const template  = document.getElementById('empty-form-template');
+    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+
+    // Add new item row
+    document.getElementById('add-item-btn').addEventListener('click', function () {
+        const count = parseInt(totalForms.value);
+        const clone = template.querySelector('.order-item-row').cloneNode(true);
+
+        // Replace __prefix__ with current count
+        clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, count);
+        container.appendChild(clone);
+        totalForms.value = count + 1;
+
+        // Attach remove handler to the new row
+        clone.querySelector('.remove-row')?.addEventListener('click', function () {
+            clone.remove();
+            totalForms.value = parseInt(totalForms.value) - 1;
+            updateSummary();
+        });
+
+        updateSummary();
+    });
+
+    // Remove row for existing new rows
+    container.querySelectorAll('.remove-row').forEach(btn => {
+        btn.addEventListener('click', function () {
+            btn.closest('.order-item-row').remove();
+            totalForms.value = parseInt(totalForms.value) - 1;
+            updateSummary();
+        });
+    });
+
+    // Live summary calculation
+    function updateSummary() {
+        const rows  = container.querySelectorAll('.order-item-row');
+        let subtotal = 0;
+        let itemCount = 0;
+
+        rows.forEach(row => {
+            const deleteCheckbox = row.querySelector('input[type=checkbox]');
+            if (deleteCheckbox && deleteCheckbox.checked) return; // skip deleted
+
+            const qty   = parseFloat(row.querySelector('input[id*=quantity]')?.value)   || 0;
+            const price = parseFloat(row.querySelector('input[id*=unit_price]')?.value) || 0;
+            if (qty > 0 && price > 0) {
+                subtotal += qty * price;
+                itemCount++;
+            }
+        });
+
+        const discountInput = document.querySelector('[name$=discount]');
+        const discount = parseFloat(discountInput?.value) || 0;
+        const total = subtotal * (1 - discount / 100);
+
+        document.getElementById('summary-items').textContent    = itemCount;
+        document.getElementById('summary-subtotal').textContent = '₹' + subtotal.toFixed(2);
+        document.getElementById('summary-total').textContent    = '₹' + total.toFixed(2);
+    }
+
+    // Attach live listeners to all quantity/price inputs (including dynamic ones via delegation)
+    container.addEventListener('input', updateSummary);
+    document.querySelector('[name$=discount]')?.addEventListener('input', updateSummary);
+
+    updateSummary();
+});
+</script>
+{% endblock %}
